@@ -12,7 +12,8 @@ class DashboardPage extends React.Component {
     super(props);
 
     this.state = {
-      secretData: ''
+      gameList: [],
+      errorMessage: ''
     };
   }
 
@@ -29,7 +30,15 @@ class DashboardPage extends React.Component {
     xhr.addEventListener('load', () => {
       if (xhr.status === 200) {
         this.setState({
-          secretData: xhr.response.message
+          gameList: xhr.response
+        })
+      } else if (xhr.status === 504) {
+        this.setState({
+          errorMessage: xhr.response.message
+        });
+      } else {
+        this.setState({
+          errorMessage: "Unknown error occured"
         });
       }
     });
@@ -40,7 +49,7 @@ class DashboardPage extends React.Component {
    * Render the component.
    */
   render() {
-    return (<Dashboard secretData={this.state.secretData} />);
+    return (<Dashboard gameList={this.state.gameList} errorMessage={this.state.errorMessage} />);
   }
 
 }
