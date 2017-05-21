@@ -49,7 +49,7 @@ class DashboardPage extends React.Component {
    * Render the component.
    */
   render() {
-    return (<Dashboard gameList={this.state.gameList} errorMessage={this.state.errorMessage} />);
+    return (<Dashboard gameList={this.state.gameList} />);
   }
 
 }

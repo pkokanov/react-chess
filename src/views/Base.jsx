@@ -7,6 +7,8 @@ import LoginPage from '../containers/LoginPage.jsx'
 import SignUpPage from '../containers/SignUpPage.jsx'
 import Auth from '../modules/Auth.jsx'
 import DashboardPage from '../containers/DashboardPage.jsx'
+import GamePage from '../containers/GamePage.jsx'
+
 
 class LogoutView extends React.Component {
   constructor(props, context){
@@ -50,7 +52,7 @@ const Base = () => (
 
     </div>
 
-    <Route path="/" render = {function() {   
+    <Route exact path="/" render = {function() {   
       if(Auth.isUserAuthenticated()) {
         return <DashboardPage/>;
       } else {
@@ -70,6 +72,7 @@ const Base = () => (
       return null;
     }}/>
     <Route path="/logout" component = {LogoutView}/>
+    <Route path="/game" component = {GamePage}/>
 
   </div>
 );
