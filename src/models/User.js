@@ -10,8 +10,8 @@ const UserSchema = new mongoose.Schema({
   },
   password: String,
   name: String,
-  hostedGames: [],
-  joinedGames: []
+  hostedGame: {},
+  joinedGame: {}
 }, {strict: false});
 
 

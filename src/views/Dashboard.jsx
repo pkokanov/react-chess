@@ -40,19 +40,28 @@ class Dashboard extends React.Component {
     xhr.send(formData);
   }
 
-  joinGameAction() {
-    console.log("asdfasdf")
+  joinGameAction(gameId, gameName) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('get', '/api/joingame?id=' + gameId + "&name=" + gameName);
+    xhr.setRequestHeader('Authorization', `bearer ${Auth.getToken()}`);
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        this.context.router.history.replace('game');
+      }
+    });
+    xhr.send();
+    console.log("clicked");
   }
 
   render() {
     var rows = []
     this.props.gameList.forEach(function (element) {
       rows.push(
-        <TableRow key={element.id}>
-          <TableRowColumn>{element.hostedGames.id}</TableRowColumn>
-          <TableRowColumn>{element.hostedGames.name}</TableRowColumn>
+        <TableRow key={element.hostedGame.id}>
+          <TableRowColumn>{element.hostedGame.id}</TableRowColumn>
+          <TableRowColumn>{element.hostedGame.name}</TableRowColumn>
           <TableRowColumn>{element.name}</TableRowColumn>
-          <TableRow Column><RaisedButton label="Join Game" style={style}/></TableRow>
+          <TableRowColumn><RaisedButton label="Join Game" style={style} onClick={() => this.joinGameAction(element.hostedGame.id, element.hostedGame.name)}/></TableRowColumn>
         </TableRow>
       );
       }, this);

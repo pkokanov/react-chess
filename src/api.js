@@ -3,7 +3,7 @@ const User = require('mongoose').model('User');
 
 function getGamesInWaiting() {
   User.aggregate([
-    {'$unwind': '$hostedGames'}
+    {'$unwind': '$hostedGame'}
   ], function(err, res){
     return res;
   })
@@ -14,7 +14,7 @@ function createNewGame(gameName, user) {
     id: guid(),
     name: gameName
   };
-  user.hostedGames.push(game);
+  user.hostedGame = game;
   return user.save((err) => {
     if (err) { 
       console.log(err); 
@@ -24,13 +24,23 @@ function createNewGame(gameName, user) {
   })
 }
 
+function findGame(gameid) {
+
+}
 
 const router = new express.Router();
 
 router.get('/dashboard', (req, res) => {
-  // const gamesInWaiting = getGamesInWaiting();
+  // const gamesInWaiting = getGamesInWaiting(); 
+  if ( req.user.hostedGame && req.user.hostedGame.name !== "") {
+    res.status(200).json({host: true})
+    return ;
+  } else if (req.user.joinedGame && req.user.joinedGame.name !== "") {
+    res.status(200).json({joined: true});
+    return;
+  }
   User.aggregate([
-    {'$unwind': '$hostedGames'},
+    {'$unwind': '$hostedGame'},
     {'$match': {'name': {'$ne': req.user.name}}}
   ], function(err, result){
    res.status(200).json(result);
@@ -42,7 +52,7 @@ router.get('/dashboard', (req, res) => {
 router.post('/newgame', (req, res) => {
   if(createNewGame(req.body.gameName, req.user)) {
     const game = req.user.hostedGames;
-    res.status(200).json(game[game.length-1]);
+    res.status(200).json(game);
   } else {
     res.status(504).json({
       message:"Could not create a new game"
@@ -50,9 +60,25 @@ router.post('/newgame', (req, res) => {
   }
 })
 
-router.get('/game/:id', (req, res) => {
-  const gameid = req.params.id;
-  games.findGame()
+router.get('/joingame', (req, res) => {
+  const gameid = req.query.id;
+  const gameName = req.query.name;
+  User.findOne({hostedGame: {name: gameName, id: gameid}}, (err, user) => {
+    if (err) { 
+      res.status(404).json(err);
+    } else {
+      var curUser = req.user;
+      curUser.joinedGame = user.hostedGame;
+      curUser.save((err) => {
+        if (err) { 
+          console.log(err); 
+          res.status(500).json(err);
+        } else {
+          res.status(200).json(user.hostedGame);
+        }
+      });
+    }
+  })
 });
 
 function guid() {

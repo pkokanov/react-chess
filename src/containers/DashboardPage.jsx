@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types'
 import Auth from '../modules/Auth.jsx';
 import Dashboard from '../views/Dashboard.jsx';
 
@@ -8,8 +9,8 @@ class DashboardPage extends React.Component {
   /**
    * Class constructor.
    */
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
 
     this.state = {
       gameList: [],
@@ -29,6 +30,13 @@ class DashboardPage extends React.Component {
     xhr.responseType = 'json';
     xhr.addEventListener('load', () => {
       if (xhr.status === 200) {
+        if(xhr.response.joined && xhr.response.joined === true) {
+          this.context.router.history.replace('game');
+          return;
+        } else if (xhr.response.host && xhr.response.host === true) {
+          this.context.router.history.replace('game');
+          return;
+        }
         this.setState({
           gameList: xhr.response
         })
@@ -53,5 +61,9 @@ class DashboardPage extends React.Component {
   }
 
 }
+
+DashboardPage.contextTypes = {
+  router: PropTypes.object.isRequired
+};
 
 export default DashboardPage;
