@@ -15,6 +15,8 @@ app.use('/login', express.static(path.join(__dirname, '../build/')));
 app.use('/login', express.static(path.join(__dirname, '../public/')));
 app.use('/signup', express.static(path.join(__dirname, '../build/')));
 app.use('/signup', express.static(path.join(__dirname, '../public/')));
+app.use('/game', express.static(path.join(__dirname, '../build/')));
+app.use('/game', express.static(path.join(__dirname, '../public/')));
 // tell the app to parse HTTP body messages
 app.use(bodyParser.urlencoded({ extended: false }));
 

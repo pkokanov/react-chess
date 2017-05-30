@@ -81,6 +81,13 @@ router.get('/joingame', (req, res) => {
   })
 });
 
+router.get('/game', (req, res) => {
+  const user = req.user;
+  res.status(200).json({
+    playerName: user.name
+  })
+})
+
 function guid() {
   function s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
