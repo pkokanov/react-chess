@@ -12,6 +12,6 @@ module.exports.connect = (uri) => {
   });
 
   // load models
-  require('./user');
-  require('./game')
+  require('./User');
+  require('./Game')
 };
