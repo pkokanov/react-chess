@@ -38,11 +38,8 @@
     "react-router-dom": "^4.1.1",
     "react-transition-group": "^1.1.2",
     "validator": "^7.0.0",
-    "webpack": "^2.6.1",
     "webpack-hot-middleware": "^2.18.0",
-    "ws": "^3.0.0"
-  },
-  "devDependencies": {
+    "ws": "^3.0.0",
     "babel-cli": "^6.24.1",
     "babel-loader": "^7.0.0",
     "babel-preset-es2015": "^6.24.1",
