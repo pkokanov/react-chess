@@ -8,7 +8,12 @@ const http = require('http');
 const WebSocket = require('ws');
 
 // connect to the database and load models
-require('./models').connect(config.dbUri);
+if(process.env.HEROKU) {
+  require('./models').connect(config.dbUri);
+} else {
+  require('./models').connect(config.dbUri);
+}
+
 const User = require('mongoose').model('User');
 const Game = require('mongoose').model('Game');
 
