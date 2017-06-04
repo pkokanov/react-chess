@@ -1,48 +1,19 @@
 const express = require('express');
 const User = require('mongoose').model('User');
-
-function getGamesInWaiting() {
-  User.aggregate([
-    {'$unwind': '$hostedGame'}
-  ], function(err, res){
-    return res;
-  })
-}
-
-function createNewGame(gameName, user) {
-  const game = {
-    id: guid(),
-    name: gameName
-  };
-  user.hostedGame = game;
-  return user.save((err) => {
-    if (err) { 
-      console.log(err); 
-      return false; }
-
-    return true;
-  })
-}
-
-function findGame(gameid) {
-
-}
+const Game = require('mongoose').model('Game');
+const WebSocket = require('ws');
 
 const router = new express.Router();
 
 router.get('/dashboard', (req, res) => {
-  // const gamesInWaiting = getGamesInWaiting(); 
-  if ( req.user.hostedGame && req.user.hostedGame.name !== "") {
-    res.status(200).json({host: true})
-    return ;
-  } else if (req.user.joinedGame && req.user.joinedGame.name !== "") {
-    res.status(200).json({joined: true});
+  if(req.user.isPlaying) {
+    res.status(200).json({isPlaying: true});
     return;
   }
-  User.aggregate([
-    {'$unwind': '$hostedGame'},
-    {'$match': {'name': {'$ne': req.user.name}}}
-  ], function(err, result){
+  Game.find({client: null, winningPlayer: null}, function(err, result){
+    if(err) {
+      res.status(500).json({error: err});
+    }
    res.status(200).json(result);
   })
   
@@ -50,43 +21,63 @@ router.get('/dashboard', (req, res) => {
 
 
 router.post('/newgame', (req, res) => {
-  if(createNewGame(req.body.gameName, req.user)) {
-    const game = req.user.hostedGames;
-    res.status(200).json(game);
-  } else {
-    res.status(504).json({
-      message:"Could not create a new game"
+  const gameData = {
+    host: req.user,
+    hostName: req.user.name,
+    name: req.body.gameName,
+    client: null,
+    clientName: null,
+    playerTurn: null,
+    winningPlayer: null,
+    board: Array(9).fill(null)
+  };
+  const newGame = new Game(gameData);
+  return newGame.save((err, game) => {
+    if (err) { 
+      console.log(err); 
+      response.status(504).json({
+        message: "Could not create a new game"
+      })
+      return; 
+    }
+    req.user.isPlaying = true;
+    req.user.game = game;
+    req.user.save((err) => {
+      if(err) {
+        console.log(err);
+        res.status(504).json({
+          message:"Could not add host to new game: " + game.name + "!"
+        });
+      } else {
+        res.status(200).json({message: "success"});
+      }
     });
-  }
+  });
 })
 
 router.get('/joingame', (req, res) => {
   const gameid = req.query.id;
   const gameName = req.query.name;
-  User.findOne({hostedGame: {name: gameName, id: gameid}}, (err, user) => {
+  Game.findOneAndUpdate({name: gameName}, {$set: {client: req.user, clientName: req.user.name, playerTurn: req.user.name}}, {new: true}, (err, game) => {
     if (err) { 
-      res.status(404).json(err);
+      console.log(err);
+      res.status(404).json({message: "Could not find game!"});
     } else {
-      var curUser = req.user;
-      curUser.joinedGame = user.hostedGame;
-      curUser.save((err) => {
-        if (err) { 
-          console.log(err); 
-          res.status(500).json(err);
+      req.user.isPlaying = true;
+      req.user.game = game;
+      req.user.save((err) => {
+        if(err) {
+          console.log(err);
+          res.status(504).json({
+            message:"Could not add client to new game: " + game.name + "!"
+          });
         } else {
-          res.status(200).json(user.hostedGame);
+          res.status(200).json({message: "success"});
         }
       });
     }
-  })
+  });
 });
-
-router.get('/game', (req, res) => {
-  const user = req.user;
-  res.status(200).json({
-    playerName: user.name
-  })
-})
 
 function guid() {
   function s4() {

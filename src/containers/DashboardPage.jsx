@@ -5,10 +5,6 @@ import Dashboard from '../views/Dashboard.jsx';
 
 
 class DashboardPage extends React.Component {
-
-  /**
-   * Class constructor.
-   */
   constructor(props, context) {
     super(props, context);
 
@@ -19,26 +15,22 @@ class DashboardPage extends React.Component {
 
     this.handleTimeout = this.handleTimeout.bind(this);
     this.sendRequest = this.sendRequest.bind(this);
+    this.createGameAction = this.createGameAction.bind(this);
+    this.joinGameAction = this.joinGameAction.bind(this);
   }
 
   sendRequest() {
     const xhr = new XMLHttpRequest();
     xhr.open('get', '/api/dashboard');
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    // set the authorization HTTP header
     xhr.setRequestHeader('Authorization', `bearer ${Auth.getToken()}`);
     xhr.responseType = 'json';
     xhr.addEventListener('load', () => {
       if (xhr.status === 200) {
-        if(xhr.response.joined && xhr.response.joined === true) {
-          clearInterval(this.handleTimeout);
+        if(xhr.response.isPlaying) {
           this.context.router.history.replace('game');
           return;
-        } else if (xhr.response.host && xhr.response.host === true) {
-          clearInterval(this.handleTimeout);
-          this.context.router.history.replace('game');
-          return;
-        }
+        } 
         this.setState({
           gameList: xhr.response
         });
@@ -46,39 +38,57 @@ class DashboardPage extends React.Component {
         this.setState({
           errorMessage: xhr.response.message
         });
-        clearInterval(this.handleTimeout);
       } else {
         this.setState({
           errorMessage: "Unknown error occured"
         });
-        clearInterval(this.handleTimeout);
+      }
+    });
+    xhr.send();
+  }
+
+  createGameAction(gameName) {
+    const formData = `gameName=${gameName}`
+    const xhr = new XMLHttpRequest();
+    xhr.open('post', '/api/newgame');
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('Authorization', `bearer ${Auth.getToken()}`);
+    xhr.responseType = 'json';
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        this.context.router.history.replace('/game');
+      } 
+    });
+    xhr.send(formData);
+  }
+
+  joinGameAction(gameId, gameName) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('get', '/api/joingame?id=' + gameId + "&name=" + gameName);
+    xhr.setRequestHeader('Authorization', `bearer ${Auth.getToken()}`);
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        this.context.router.history.replace('game');
       }
     });
     xhr.send();
   }
 
   handleTimeout() {
-    this.sendRequest();
-    console.log("lol");
+    this.sendRequest(); 
   }
 
-  /**
-   * This method will be executed after initial rendering.
-   */
   componentDidMount() {
       this.sendRequest();
       this.timer = setInterval(this.handleTimeout, 10000);    
   }
 
   componentWillUnmount() {
-    clearInterval(this.handleTimeout);
+    clearInterval(this.timer);
   }
 
-  /**
-   * Render the component.
-   */
   render() {
-    return (<Dashboard gameList={this.state.gameList} errorMessage={this.state.errorMessage}/>);
+    return (<Dashboard gameList={this.state.gameList} errorMessage={this.state.errorMessage} joinGameAction={(gameId, gameName) => this.joinGameAction(gameId, gameName)} createGameAction={(gameName) => this.createGameAction(gameName)}/>);
   }
 
 }

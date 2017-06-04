@@ -10,8 +10,11 @@ const UserSchema = new mongoose.Schema({
   },
   password: String,
   name: String,
-  hostedGame: {},
-  joinedGame: {}
+  isPlaying: Boolean,
+  game: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Game'
+  }
 }, {strict: false});
 
 

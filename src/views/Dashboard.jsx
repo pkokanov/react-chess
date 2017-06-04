@@ -15,8 +15,6 @@ class Dashboard extends React.Component {
     super(props, context)
 
     this.gameName = ''
-    this.createGameAction = this.createGameAction.bind(this);
-    this.joinGameAction = this.joinGameAction.bind(this);
     this.onChange = this.onChange.bind(this);
   }
 
@@ -24,44 +22,15 @@ class Dashboard extends React.Component {
     this.gameName = event.target.value;
   }
 
-  createGameAction(event) {
-    const formData = `gameName=${this.gameName}`
-    const xhr = new XMLHttpRequest();
-    xhr.open('post', '/api/newgame');
-    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xhr.setRequestHeader('Authorization', `bearer ${Auth.getToken()}`);
-    xhr.responseType = 'json';
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-       
-        this.context.router.history.replace('/game');
-      } 
-    });
-    xhr.send(formData);
-  }
-
-  joinGameAction(gameId, gameName) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('get', '/api/joingame?id=' + gameId + "&name=" + gameName);
-    xhr.setRequestHeader('Authorization', `bearer ${Auth.getToken()}`);
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-        this.context.router.history.replace('game');
-      }
-    });
-    xhr.send();
-    console.log("clicked");
-  }
-
   render() {
     var rows = []
     this.props.gameList.forEach(function (element) {
       rows.push(
-        <TableRow key={element.hostedGame.id}>
-          <TableRowColumn>{element.hostedGame.id}</TableRowColumn>
-          <TableRowColumn>{element.hostedGame.name}</TableRowColumn>
+        <TableRow key={element._id}>
+          <TableRowColumn>{element._id}</TableRowColumn>
           <TableRowColumn>{element.name}</TableRowColumn>
-          <TableRowColumn><RaisedButton label="Join Game" style={style} onClick={() => this.joinGameAction(element.hostedGame.id, element.hostedGame.name)}/></TableRowColumn>
+          <TableRowColumn>{element.hostName}</TableRowColumn>
+          <TableRowColumn><RaisedButton label="Join Game" style={style} onClick={() => this.props.joinGameAction(element._id, element.name)}/></TableRowColumn>
         </TableRow>
       );
       }, this);
@@ -86,7 +55,7 @@ class Dashboard extends React.Component {
         </Table>
         <br /><br /><br />
         <TextField hintText="New Game Name" onChange={this.onChange}/>
-        <RaisedButton label="Create Game" style={style} type="submit" primary onClick={this.createGameAction}/>
+        <RaisedButton label="Create Game" style={style} type="submit" primary onClick={() => this.props.createGameAction(this.gameName)}/>
       </Card>
     );
   };
@@ -96,7 +65,9 @@ Dashboard.contextTypes = {
   router: PropTypes.object.isRequired
 };
 Dashboard.propTypes = {
-  gameList: PropTypes.array.isRequired
+  gameList: PropTypes.array.isRequired,
+  createGameAction: PropTypes.func.isRequired,
+  joinGameAction: PropTypes.func.isRequired
 };
 
 export default Dashboard;
