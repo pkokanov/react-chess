@@ -4,8 +4,10 @@
   "description": "Chess game using React.",
   "main": "src/app.js",
   "scripts": {
-    "start": "nodemon src/app.js",
+    "start": "webpack && node src/app.js",
     "bundle": "webpack",
+    "dev-start": "nodemon src/app.js",
+    "dev-bundle": "webpack --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
