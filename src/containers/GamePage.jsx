@@ -18,7 +18,8 @@ class GamePage extends React.Component {
             clientLeft: false
         }
 
-        this.socket = new WebSocket('ws://localhost:3000/game');
+        let HOST = window.location.origin.replace(/^http/, 'ws')
+        this.socket = new WebSocket(HOST);
         this.handleConnectionOpen = this.handleConnectionOpen.bind(this);
         this.handleReceiveMessage = this.handleReceiveMessage.bind(this);
         this.handleRestartAction = this.handleRestartAction.bind(this);
