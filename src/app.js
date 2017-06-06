@@ -8,7 +8,15 @@ const http = require('http');
 const WebSocket = require('ws');
 
 // connect to the database and load models
-require('./models').connect(config.dbUri);
+function isHeroku() {
+  return process.env.NODE && ~process.env.NODE.indexOf("heroku") ? true : false;
+}
+
+if(isHeroku())
+  require('./models').connect(config.dbUriHeroku);
+else {
+  require('./models').connect(config.dbUriLocal);
+}
 const User = require('mongoose').model('User');
 const Game = require('mongoose').model('Game');
 
@@ -67,16 +75,30 @@ function handleGameQuit(err, user, ws, message) {
               console.log(err);
               ws.send(JSON.stringify({type: "ERROR", data: err}));
             } else {
-              User.findByIdAndUpdate(game.client, {$set: {isPlaying: false, game: null}}, {new: true}, (err, user) => {
-              if (err) { 
-              console.log(err);
-              ws.send(JSON.stringify({type: "ERROR", data: err}));
-              } else {
-                wss.clients.forEach(function each(client) {
-                  client.send(JSON.stringify({type: "HOST_STOPPED_GAME"}))
+              game.isOver = true;
+              game.save((err) => {
+                if(err) {
+                  console.log(err);
+                  let message = {
+                    type: "ERROR",
+                    data: err
+                  };
+                }
+              });
+              if(game.client && game.clientName.trim().length !== 0) {
+                User.findByIdAndUpdate(game.client, {$set: {isPlaying: false, game: null}}, {new: true}, (err, user) => {
+                  if (err) { 
+                  console.log(err);
+                  ws.send(JSON.stringify({type: "ERROR", data: err}));
+                  } else {
+                    wss.clients.forEach(function each(client) {
+                      client.send(JSON.stringify({type: "HOST_STOPPED_GAME"}))
+                    });
+                  }
                 });
+              } else {
+                ws.send(JSON.stringify({type: "HOST_STOPPED_GAME"}));
               }
-            });
             }
           });
         } else {
@@ -117,9 +139,16 @@ function handleGameRestart(err, user, ws, message) {
         };
         ws.send(JSON.stringify(message));
       } else {
-        game.playerTurn = game.clientName;
+        if(game.startingPlayer === game.clientName) {
+          game.playerTurn = game.hostName;
+          game.startingPlayer = game.hostName;
+        } else {
+          game.playerTurn = game.clientName;
+          game.startingPlayer = game.clientName;
+        }
         game.board = Array(9).fill(null);
         game.winningPlayer = null;
+        game.isOver = false;
         game.save((err) => {
           if(err) {
             console.log(err);
@@ -135,7 +164,7 @@ function handleGameRestart(err, user, ws, message) {
               otherPlayer: game.clientName,
               isHost: true,
               board: game.board,
-              playerTurn: game.clientName,
+              playerTurn: game.playerTurn,
               winningPlayer: null
             }
             wss.clients.forEach(function sendall(client) {
@@ -239,9 +268,11 @@ function handleBoardClick(err, user, ws, message) {
           const column = message.column;
           let tempBoard = game.board.slice();
           const isHost = (user._id.toString() === game.host.toString());
-          tempBoard[index] = isHost? 'O' : 'X';
+          const startedFirst = user.name === game.startingPlayer;
+          tempBoard[index] = startedFirst? 'X' : 'O';
           if(checkWin(tempBoard)) {
-            game.winningPlayer = game.playerTurn;  
+            game.winningPlayer = game.playerTurn; 
+            game.isOver = true; 
           }
           game.board = tempBoard;
           if(game.playerTurn == game.hostName) {

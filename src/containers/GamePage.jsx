@@ -96,7 +96,8 @@ class GamePage extends React.Component {
                 this.setState({
                     otherPlayer: null,
                     clientLeft: true
-                })
+                });
+                this.context.router.history.replace('/');
             } else {
                 this.context.router.history.replace('/');
             }           

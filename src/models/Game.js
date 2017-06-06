@@ -2,10 +2,7 @@ const mongoose = require('mongoose');
 
 // define the User model schema
 const GameSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        index: { unique: true }
-    },
+    name: String,
     host: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -16,8 +13,10 @@ const GameSchema = new mongoose.Schema({
         ref: 'User'
     },
     clientName: String,
+    startingPlayer: String,
     playerTurn: String,
     winningPlayer: String,
+    isOver: Boolean,
     board: []
 }, {strict: false});
 

@@ -10,7 +10,7 @@ router.get('/dashboard', (req, res) => {
     res.status(200).json({isPlaying: true});
     return;
   }
-  Game.find({client: null, winningPlayer: null}, function(err, result){
+  Game.find({client: null, winningPlayer: null, isOver: false}, function(err, result){
     if(err) {
       res.status(500).json({error: err});
     }
@@ -21,6 +21,13 @@ router.get('/dashboard', (req, res) => {
 
 
 router.post('/newgame', (req, res) => {
+  if(!req.body || typeof req.body.gameName !== 'string' || req.body.gameName.trim().length === 0) {
+    res.status(400).json({
+      success: false,
+      message: "please provide a name for the game"
+    });
+    return;
+  }
   const gameData = {
     host: req.user,
     hostName: req.user.name,
@@ -28,7 +35,9 @@ router.post('/newgame', (req, res) => {
     client: null,
     clientName: null,
     playerTurn: null,
+    startingPlayer: null,
     winningPlayer: null,
+    isOver: false,
     board: Array(9).fill(null)
   };
   const newGame = new Game(gameData);
@@ -58,7 +67,7 @@ router.post('/newgame', (req, res) => {
 router.get('/joingame', (req, res) => {
   const gameid = req.query.id;
   const gameName = req.query.name;
-  Game.findOneAndUpdate({name: gameName}, {$set: {client: req.user, clientName: req.user.name, playerTurn: req.user.name}}, {new: true}, (err, game) => {
+  Game.findByIdAndUpdate(gameid, {$set: {client: req.user, clientName: req.user.name, playerTurn: req.user.name, startingPlayer: req.user.name}}, {new: true}, (err, game) => {
     if (err) { 
       console.log(err);
       res.status(404).json({message: "Could not find game!"});

@@ -16,6 +16,7 @@ class Dashboard extends React.Component {
 
     this.gameName = ''
     this.onChange = this.onChange.bind(this);
+    console.log(this.props.errorMessage);
   }
 
   onChange(event) {
@@ -54,7 +55,10 @@ class Dashboard extends React.Component {
           </TableBody>
         </Table>
         <br /><br /><br />
-        <TextField hintText="New Game Name" onChange={this.onChange}/>
+        <TextField hintText="New Game Name" 
+          onChange={this.onChange}
+          errorText={this.props.errorMessage}
+        />
         <RaisedButton label="Create Game" style={style} type="submit" primary onClick={() => this.props.createGameAction(this.gameName)}/>
       </Card>
     );

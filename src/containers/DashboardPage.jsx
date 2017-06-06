@@ -32,9 +32,9 @@ class DashboardPage extends React.Component {
           return;
         } 
         this.setState({
-          gameList: xhr.response
+          gameList: xhr.response,
         });
-      } else if (xhr.status === 504) {
+      } else if (xhr.status === 400) {
         this.setState({
           errorMessage: xhr.response.message
         });
@@ -57,7 +57,11 @@ class DashboardPage extends React.Component {
     xhr.addEventListener('load', () => {
       if (xhr.status === 200) {
         this.context.router.history.replace('/game');
-      } 
+      } else if (xhr.status === 400) {
+        this.setState({
+          errorMessage: xhr.response.message
+        });
+      }
     });
     xhr.send(formData);
   }
